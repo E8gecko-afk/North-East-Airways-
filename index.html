@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>North East Airways - Pilot Flight Logger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0a1628 0%, #1a3a6c 50%, #0a1628 100%);
+            min-height: 100vh;
+            color: #fff;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #ff6b00 0%, #ff8c00 50%, #ff6b00 100%);
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(255, 107, 0, 0.4);
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .header .subtitle {
+            font-size: 1em;
+            margin-top: 6px;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 15px;
+        }
+        
+        .log-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #ff6b00;
+            border-radius: 16px;
+            padding: 25px 20px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .log-section h2 {
+            color: #ff8c00;
+            font-size: 1.5em;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .form-group {
+            width: 100%;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ff8c00;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 16px 16px;
+            border: 2px solid #1e5aa8;
+            border-radius: 12px;
+            background: rgba(10, 22, 40, 0.9);
+            color: #fff;
+            font-size: 16px;
+            font-family: inherit;
+            -webkit-appearance: none;
+            appearance: none;
+            outline: none;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #ff6b00;
+            box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.2);
+        }
+        
+        /* Native Select - Simplified for iOS */
+        select {
+            width: 100%;
+            padding: 16px 16px;
+            border: 2px solid #1e5aa8;
+            border-radius: 12px;
+            background: rgba(10, 22, 40, 0.9);
+            color: #fff;
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+            min-height: 52px;
+        }
+        
+        select:focus {
+            border-color: #ff6b00;
+        }
+        
+        select option {
+            background: #0a1628;
+            color: #fff;
+            font-size: 16px;
+            padding: 12px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            touch-action: manipulation;
+        }
+        
+        .btn:active {
+            transform: scale(0.97);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+            padding: 10px 18px;
+            font-size: 0.85em;
+            width: auto;
+        }
+        
+        .fleet-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        @media (min-width: 640px) {
+            .fleet-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .form-row {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .form-group {
+                flex: 1;
+                min-width: 200px;
+            }
+            .btn {
+                width: auto;
+                align-self: flex-end;
+                padding: 16px 36px;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .fleet-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        .aircraft-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #1e5aa8;
+            border-radius: 14px;
+            padding: 18px;
+            transition: all 0.3s ease;
+        }
+        
+        .aircraft-card:hover {
+            border-color: #ff6b00;
+        }
+        
+        .aircraft-type {
+            font-size: 1.3em;
+            font-weight: 800;
+            color: #ff8c00;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tail-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .tail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            background: rgba(30, 90, 168, 0.15);
+            border-radius: 10px;
+            border-left: 4px solid #1e5aa8;
+            transition: all 0.3s ease;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tail-item.maintenance {
+            border-left-color: #dc2626;
+            background: rgba(220, 38, 38, 0.15);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+        }
+        
+        .tail-number {
+            font-weight: 700;
+            font-size: 1em;
+            color: #fff;
+            min-width: 80px;
+        }
+        
+        .tail-stats {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .flight-count {
+            background: #1e5aa8;
+            color: #fff;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9em;
+            min-width: 45px;
+            text-align: center;
+        }
+        
+        .tail-item.maintenance .flight-count {
+            background: #dc2626;
+        }
+        
+        .maintenance-badge {
+            background: #dc2626;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.7em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            animation: blink 1.5s infinite;
+            white-space: nowrap;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateY(-200px);
+            transition: transform 0.4s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            text-align: center;
+            font-size: 0.95em;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+        }
+        
+        .toast.success {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: #fff;
+        }
+        
+        .toast.warning {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: #fff;
+        }
+        
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-box {
+            background: rgba(255, 107, 0, 0.1);
+            border: 1px solid #ff6b00;
+            border-radius: 12px;
+            padding: 16px 10px;
+            text-align: center;
+        }
+        
+        .stat-box .number {
+            font-size: 1.8em;
+            font-weight: 800;
+            color: #ff8c00;
+        }
+        
+        .stat-box .label {
+            font-size: 0.75em;
+            color: #aaa;
+            margin-top: 4px;
+            line-height: 1.3;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 25px 15px;
+            color: #666;
+            font-size: 0.85em;
+            border-top: 1px solid rgba(255, 107, 0, 0.2);
+            margin-top: 10px;
+        }
+        
+        .footer strong {
+            color: #ff8c00;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✈️ NORTH EAST AIRWAYS</h1>
+        <div class="subtitle">Pilot Flight Logger & Maintenance Tracker</div>
+    </div>
+    
+    <div class="container">
+        <div class="stats-bar">
+            <div class="stat-box">
+                <div class="number" id="totalFlights">0</div>
+                <div class="label">Total Flights</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="totalAircraft">59</div>
+                <div class="label">Fleet Size</div>
+            </div>
+            <div class="stat-box">
+                <div class="number" id="maintenanceNeeded">0</div>
+                <div class="label">Maintenance</div>
+            </div>
+        </div>
+        
+        <div class="log-section">
+            <h2>Log a Flight</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="pilotName">Pilot Name</label>
+                    <input type="text" id="pilotName" placeholder="Enter your name" autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label for="aircraftType">Aircraft Type</label>
+                    <select id="aircraftType">
+                        <option value="">Select Aircraft Type</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tailNumber">Tail Number</label>
+                    <select id="tailNumber">
+                        <option value="">Select Tail Number</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="logBtn">Log Flight</button>
+            </div>
+        </div>
+        
+        <div class="log-section">
+            <h2>Fleet Status</h2>
+            <div class="fleet-grid" id="fleetGrid"></div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <strong>North East Airways</strong> — Virtual Airline Operations<br>
+        <span style="color: #555;">Data saved locally in your browser</span>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        const fleetData = {
+            "A320": ["N320NE","N321NE","N322NE","N323NE","N324NE","N325NE","N326NE","N327NE","N328NE","N329NE","N330NE","N331NE","N332NE","N333NE","N334NE"],
+            "A321": ["N421NE","N422NE","N423NE","N424NE","N425NE","N426NE","N427NE","N428NE","N429NE","N430NE"],
+            "A330": ["N501NE","N502NE","N503NE","N504NE","N505NE","N506NE","N507NE","N508NE"],
+            "A350": ["N551NE","N552NE","N553NE","N554NE"],
+            "737": ["N701NE","N702NE","N703NE","N704NE","N705NE","N706NE","N707NE","N708NE","N709NE","N710NE","N711NE","N712NE","N713NE","N714NE","N715NE"],
+            "757": ["N611NE","N612NE","N613NE","N614NE","N615NE","N616NE","N617NE"]
+        };
+        
+        const MAINTENANCE_THRESHOLD = 10;
+        
+        function getFlightData() {
+            const saved = localStorage.getItem('neaFlightData_v4');
+            if (saved) return JSON.parse(saved);
+            const data = {};
+            for (const type in fleetData) {
+                fleetData[type].forEach(tail => {
+                    data[tail] = 0;
+                });
+            }
+            return data;
+        }
+        
+        function saveFlightData(data) {
+            localStorage.setItem('neaFlightData_v4', JSON.stringify(data));
+        }
+        
+        let flightData = getFlightData();
+        
+        function init() {
+            const typeSelect = document.getElementById('aircraftType');
+            for (const type in fleetData) {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type + ' (' + fleetData[type].length + ')';
+                typeSelect.appendChild(option);
+            }
+            
+            typeSelect.addEventListener('change', updateTailNumbers);
+            document.getElementById('logBtn').addEventListener('click', logFlight);
+            
+            renderFleet();
+            updateStats();
+        }
+        
+        function updateTailNumbers() {
+            const type = document.getElementById('aircraftType').value;
+            const tailSelect = document.getElementById('tailNumber');
+            tailSelect.innerHTML = '<option value="">Select Tail Number</option>';
+            if (type && fleetData[type]) {
+                fleetData[type].forEach(tail => {
+                    const option = document.createElement('option');
+                    option.value = tail;
+                    const flights = flightData[tail] || 0;
+                    option.textContent = tail + ' (' + flights + ' flights)';
+                    tailSelect.appendChild(option);
+                });
+            }
+        }
+        
+        function logFlight() {
+            const pilotName = document.getElementById('pilotName').value.trim();
+            const type = document.getElementById('aircraftType').value;
+            const tail = document.getElementById('tailNumber').value;
+            
+            if (!pilotName) {
+                showToast('Please enter your name', 'warning');
+                return;
+            }
+            if (!type || !tail) {
+                showToast('Please select aircraft type and tail number', 'warning');
+                return;
+            }
+            
+            flightData[tail] = (flightData[tail] || 0) + 1;
+            saveFlightData(flightData);
+            
+            const newCount = flightData[tail];
+            
+            if (newCount >= MAINTENANCE_THRESHOLD) {
+                showToast('⚠️ ' + tail + ' — SCHEDULE FOR MAINTENANCE! (' + newCount + ' flights)', 'warning');
+            } else {
+                showToast('✅ Flight logged! ' + tail + ' now has ' + newCount + ' flights.', 'success');
+            }
+            
+            document.getElementById('pilotName').value = '';
+            document.getElementById('aircraftType').value = '';
+            document.getElementById('tailNumber').innerHTML = '<option value="">Select Tail Number</option>';
+            renderFleet();
+            updateStats();
+        }
+        
+        function resetMaintenance(tail) {
+            if (confirm('Reset flight count for ' + tail + '?')) {
+                flightData[tail] = 0;
+                saveFlightData(flightData);
+                showToast('🔧 ' + tail + ' maintenance complete — reset to 0', 'success');
+                renderFleet();
+                updateStats();
+            }
+        }
+        
+        function renderFleet() {
+            const grid = document.getElementById('fleetGrid');
+            grid.innerHTML = '';
+            
+            for (const type in fleetData) {
+                const card = document.createElement('div');
+                card.className = 'aircraft-card';
+                
+                let tailHTML = '';
+                fleetData[type].forEach(tail => {
+                    const count = flightData[tail] || 0;
+                    const needsMaint = count >= MAINTENANCE_THRESHOLD;
+                    tailHTML += `
+                        <div class="tail-item ${needsMaint ? 'maintenance' : ''}">
+                            <span class="tail-number">${tail}</span>
+                            <div class="tail-stats">
+                                <span class="flight-count">${count}</span>
+                                ${needsMaint ? '<span class="maintenance-badge">Schedule for Maintenance</span>' : ''}
+                                <button class="btn btn-danger" onclick="resetMaintenance('${tail}')">Reset</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                card.innerHTML = `
+                    <div class="aircraft-type">✈️ ${type}</div>
+                    <div class="tail-list">${tailHTML}</div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+        
+        function updateStats() {
+            let totalFlights = 0;
+            let maintenanceCount = 0;
+            for (const tail in flightData) {
+                totalFlights += flightData[tail];
+                if (flightData[tail] >= MAINTENANCE_THRESHOLD) {
+                    maintenanceCount++;
+                }
+            }
+            document.getElementById('totalFlights').textContent = totalFlights;
+            document.getElementById('maintenanceNeeded').textContent = maintenanceCount;
+        }
+        
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
